@@ -1,0 +1,6 @@
+
+.fileList td {cursor:pointer;}
+.fileList tr:hover td {background-color:#888;color:#fff;}
+.uk-table-small td, .uk-table-small th {padding:2px 5px;}
+.uk-table-small td {font-size:12px;}
+
