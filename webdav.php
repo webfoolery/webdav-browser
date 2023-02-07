@@ -25,8 +25,11 @@ class webdav {
 	public $endpoint;
 	public $fileList;
 	public $log;
+	public $lockedFiles;
+	public $recurseLog = array();
 	
 	function __construct() {
+		ini_set ('max_execution_time', 1200);
 		if (isset($_POST['location'])) {
 			$this->location = $_POST['location'];
 			$_SESSION['location'] = $_POST['location'];
@@ -59,6 +62,7 @@ class webdav {
 		if ($this->auth & $this->location & $this->endpoint) {
 			$task = (isset($_POST['task']) ? $_POST['task'] : false);
 			if ($task && method_exists($this, $task)) $this->{$task}();
+			// TRIGGER THE FILE LIST
 			$fileList = $this->getlistFilesArray();
 		}
 	}
@@ -95,10 +99,40 @@ class webdav {
 		return $this->itemProperties;
 	}
 	
-	function getlistFilesArray() {
-		if (isset($this->fileList)) return $this->fileList;
+	function showLocked() {
 		if (!$this->location || !$this->endpoint || !$this->auth) return false;
 		$properties = $this->propfind();
+		if (isset($properties['error'])) return $properties;
+		$lockedFiles = $this->recurse();
+		if (!is_array($this->lockedFiles) || !count($this->lockedFiles)) {
+			$this->lockedFiles = array();
+		}
+		return $this->lockedFiles;
+	}
+	
+	function recurse($endpoint = false) {
+		if (!$endpoint) $endpoint = $this->location.$this->endpoint;
+		$this->recurseLog[] = $endpoint;
+		$items = $this->getlistFilesArray($endpoint);
+		foreach ($items as $item) {
+			if (!$item) continue;
+			if ($item['path'] == '/') continue;
+			if (strpos($item['path'], 'recycle')) continue;
+			if ($item['path'] == str_replace($this->location, '', $endpoint)) continue;
+			if (strpos($item['type'], 'httpd/unix-directory') !==false) {
+				$this->recurse($this->location.$item['path']);
+			}
+			else if ($item['lock']) {
+				$this->lockedFiles[] = $item;
+			}
+		}
+		return;
+	}
+	
+	function getlistFilesArray($url = false) {
+		if (isset($this->fileList) && !$url) return $this->fileList;
+		if (!$this->location || !$this->endpoint || !$this->auth) return false;
+		$properties = $this->propfind($url);
 		if (isset($properties['error'])) return $properties;
 		$xmlDoc = new DOMDocument();
 		$xmlDoc->loadXML($properties);
@@ -167,10 +201,14 @@ class webdav {
 				);
 			}
 		}
-		if ($counter == 2) $this->itemProperties = $this->getPropertiesArray();
+		if ($counter == 2 && !$url) {
+			// IT MUST BE A FILE, GET THE PROPERTIES SETTING
+			$this->itemProperties = $this->getPropertiesArray();
+		}
 		array_multisort (array_column($files, 'path'), SORT_NATURAL | SORT_FLAG_CASE, $files);
 		array_multisort (array_column($directories, 'path'), SORT_NATURAL | SORT_FLAG_CASE, $directories);
 		$fileTree = array_merge($directories, $files);
+		if ($url) return $fileTree;
 		$this->fileList = $fileTree;
 		return $this->fileList;
 	}
@@ -219,11 +257,11 @@ class webdav {
 	}
 
 	function propfind($url = false) {
-		 if (!$url) {
-			 if (isset($this->propfind) && !isset($this->unlockStatus)) return $this->propfind;
-			 $url = $this->location.$this->endpoint;
-		 }
-		 $xml = '<?xml version="1.0" encoding="utf-8" ?><D:propfind xmlns:D="DAV:"><D:prop><D:creationdate/><D:getlastmodified/><D:getcontentlength/></D:prop></D:propfind>';
+		if (!$url) {
+		if (isset($this->propfind) && !isset($this->unlockStatus)) return $this->propfind;
+		$url = $this->location.$this->endpoint;
+		}
+		$xml = '<?xml version="1.0" encoding="utf-8" ?><D:propfind xmlns:D="DAV:"><D:prop><D:creationdate/><D:getlastmodified/><D:getcontentlength/></D:prop></D:propfind>';
 		$ch = curl_init();
 		// FIX LOCALHOST SSL CERTIFICATE ISSUES
 		if ($_SERVER['SERVER_NAME'] == 'localhost') curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
@@ -250,8 +288,8 @@ class webdav {
 			return array('error'=>curl_errno($ch).': '.curl_error($ch), 'response'=>print_r($curlInfo,1));
 		}
 		curl_close($ch);
-		$this->propfind = $response;
-		return $this->propfind;
+		if (!$url) $this->propfind = $response;
+		return $response;
 	}
 	
 	function removeEmptyArrayElements($haystack) {

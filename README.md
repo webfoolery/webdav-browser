@@ -30,3 +30,8 @@ The cURL method:
 
     curl -X UNLOCK '{path-to-resource}' -H 'Authorization: Basic {base64 encoded username:password}' -H 'Lock-Token: <{lock-token-from-first-request}>'
 
+# Changelog
+
+* 2021-03-05 Adds Dockerfile & docker-compose to spin the tool up in Docker
+
+* 2020-09-08 Adds task to show all locked files by recursing the file structure from the user defined endpoint. NB this can be slow so max_execution_time is set to 1200 in webdav.php

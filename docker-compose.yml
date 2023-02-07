@@ -1,0 +1,10 @@
+version: '3'
+services:
+  webdav:
+    image: php:7.4-apache
+    container_name: webdav-browser
+    volumes:
+      - ./:/var/www/html
+    ports:
+      - "4040:80"
+      

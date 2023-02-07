@@ -1,6 +1,9 @@
 <?php
 require_once('./webdav.php');
 $webdav = new webdav();
+// if (isset($webdav->lockedFiles)) echo'<pre>'.print_r($webdav->showLocked(), 1).'</pre>';exit;
+// echo'<pre>'.print_r($webdav->showLocked(), 1).'</pre>';
+// echo'<pre>'.print_r($webdav, 1).'</pre>';
 ?>
 
 <!doctype html>
@@ -54,7 +57,8 @@ $webdav = new webdav();
 								<label class="uk-form-label" for="task">Task</label>
 								<div class="uk-form-controls">
 									<select class="uk-select" name="task" id="task">
-										<option value="">Select...</option>
+										<option value="">Directory browser</option>
+										<option value="showLocked">Show all locked files</option>
 										<option value="getlistFilesArray">getlistFilesArray</option>
 										<option value="getPropertiesArray">getPropertiesArray</option>
 										<option value="getLockToken">getLockToken</option>
@@ -106,6 +110,51 @@ $webdav = new webdav();
 						</div>
 					</div>
 					<?php endif; ?>
+					
+					
+					<?php 
+					if (isset($webdav->lockedFiles)) :
+						$tableLockedFiles = '';
+						foreach ($webdav->lockedFiles as $lockedFile) {
+							if (!$lockedFile) continue;
+							$lockedFile['type'] = explode('/', $lockedFile['type'])[count(explode('/', $lockedFile['type']))-1];
+							$class = 'uk-text-danger';
+							$tableLockedFiles .= '<tr data-endpoint="'.$lockedFile['path'].'" class="'.$class.'">
+							<td>'.urldecode(str_replace($webdav->endpoint, '', $lockedFile['name'])).'</td>
+							<td>'.$lockedFile['type'].'</td>
+							<td>'.$lockedFile['created'].'</td>
+							<td>'.$lockedFile['modified'].'</td>
+							<td>'.$lockedFile['sizeFormatted'].'</td>
+							<td>'.$lockedFile['lock'].'</td>
+							</tr>';
+						}
+						?>
+							<div>
+								<div class="uk-card uk-card-default">
+									<div class="uk-card-header"><h2>All Locked Files (recursed within <i><?php echo $webdav->endpoint; ?></i>)</h2></div>
+									<div class="uk-card-body">
+										<?php if (strlen($tableLockedFiles)) : ?>
+											<table class="uk-table uk-table-small uk-table-striped fileList"><tr>
+												<th>Name</th>
+												<th>Type</th>
+												<th>Created</th>
+												<th>Modified</th>
+												<th>Size</th>
+												<th>Lock</th>
+											</tr>
+											<?php echo $tableLockedFiles;?>
+											</table>
+										<?php else: ?>
+											<p>No files appear to be locked.</p>
+										<?php endif; ?>
+									</div>
+								</div>
+							</div>
+					<?php endif; ?>
+					
+					
+					
+					
 					<?php 
 					if (isset($webdav->fileList) && !isset($webdav->fileList['error']) && is_array($webdav->fileList) && count($webdav->fileList)) :
 						$fileList = $webdav->fileList;
@@ -136,7 +185,7 @@ $webdav = new webdav();
 									<td>'.$file['lock'].'</td>
 									</tr>';
 							}
-							if (strlen($tableLockedFiles)) :
+							if (strlen($tableLockedFiles) && !$webdav->lockedFiles) :
 							?>
 								<div>
 									<div class="uk-card uk-card-default">
@@ -192,6 +241,7 @@ $webdav = new webdav();
 							if (isset($webdav->verboseLog)) echo'<li><a class="uk-accordion-title" href="#">verboseLog</a><div class="uk-accordion-content"><pre>'.print_r($webdav->verboseLog, 1).'</pre></div></li>';
 							if (isset($webdav->propfind)) echo'<li><a class="uk-accordion-title" href="#">propfind</a><div class="uk-accordion-content"><pre>'.htmlentities($webdav->propfind, 1).'</pre></div></li>';
 							if (isset($webdav)) echo'<li><a class="uk-accordion-title" href="#">webdav</a><div class="uk-accordion-content"><pre>'.print_r($webdav, 1).'</pre></div></li>';
+							if (count($webdav->recurseLog)) echo'<li><a class="uk-accordion-title" href="#">recurseLog</a><div class="uk-accordion-content"><pre>'.print_r($webdav->recurseLog, 1).'</pre></div></li>';
 							?>
 						</ul>
 					</div>
