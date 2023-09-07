@@ -32,6 +32,8 @@ The cURL method:
 
 # Changelog
 
+* 2023-09-07 Adds .env file support to optionally store credentials & location for remote webdav 
+
 * 2021-03-05 Adds Dockerfile & docker-compose to spin the tool up in Docker
 
 * 2020-09-08 Adds task to show all locked files by recursing the file structure from the user defined endpoint. NB this can be slow so max_execution_time is set to 1200 in webdav.php

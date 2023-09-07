@@ -12,7 +12,6 @@ NB: YOU CAN ALSO UNLOCK A FILE FROM THE COMMAND LINE WITH 2 cURL COMMANDS:
 */
 
 // session_start();
-
 date_default_timezone_set('Europe/London');
 
 class webdav {
@@ -29,12 +28,14 @@ class webdav {
 	public $recurseLog = array();
 	
 	function __construct() {
+		$env = parse_ini_file('.env');
 		ini_set ('max_execution_time', 1200);
 		if (isset($_POST['location'])) {
 			$this->location = $_POST['location'];
 			$_SESSION['location'] = $_POST['location'];
 		}
 		else if (isset($_SESSION['location'])) $this->location = $_SESSION['location'];
+		else if (isset($env["LOCATION"])) $this->location = $env["LOCATION"];
 		else $this->location = null;
 		if ($this->location) {
 			$this->host = parse_url($this->location, PHP_URL_HOST);
@@ -45,18 +46,21 @@ class webdav {
 			$_SESSION['username'] = $_POST['username'];
 		}
 		else if (isset($_SESSION['username'])) $this->username = $_SESSION['username'];
+		else if (isset($env["USERNAME"])) $this->username = $env["USERNAME"];
 		else $this->username = null;
 		if (isset($_POST['password'])) {
 			$this->password = $_POST['password'];
 			$_SESSION['password'] = $_POST['password'];
 		}
 		else if (isset($_SESSION['password'])) $this->password = $_SESSION['password'];
+		else if (isset($env["PASSWORD"])) $this->password = $env["PASSWORD"];
 		else $this->password = null;
 		if (isset($this->username) && isset($this->password)) $this->auth = base64_encode($this->username.':'.$this->password);
 		if (isset($_POST['endpoint'])) {
 			$this->endpoint = $_POST['endpoint'];
 			$_SESSION['endpoint'] = $_POST['endpoint'];
 		}
+		else if (isset($env["ENDPOINT"])) $this->endpoint = $env["ENDPOINT"];
 		else $this->endpoint = null;
 		
 		if ($this->auth & $this->location & $this->endpoint) {
