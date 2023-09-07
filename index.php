@@ -101,6 +101,7 @@ $webdav = new webdav();
 										<li><b><?php echo $k; ?>:</b> <?php echo $v; ?></li>
 									<?php endforeach; ?>
 								</ul>
+								<p>Click <i>Unlock</i> below to unlock the file using your current credentials, or enter an alternative username/password first if needed</p>
 								<?php if (isset($webdav->itemProperties['lockToken'])) : ?>
 									<input class="uk-input uk-form-width-small" name="altUserEntry" type="text" placeholder="Alt username" />
 									<input class="uk-input uk-form-width-small" name="altPassEntry" type="password" placeholder="Alt password" />
