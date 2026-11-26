@@ -1,7 +1,13 @@
 # Webdav Browser
 **Browse webdav locations, unlock stuck files**
 
-Please note this is not entirely finished & may never be, but it does what it set out to do.
+> [!CAUTION]
+> This project is no longer actively maintained and currently uses
+> PHP 7.4, which has reached end of life and contains known security
+> vulnerabilities. The code is not currently compatible with PHP 8.
+> Use at your own risk and do not expose it to the public internet.
+ 
+Please note this is not entirely finished & may never be, but it does largely do what it set out to do.
 
 A tool to solve a problem... WebDAV is still alive & well despite its age and and better alternatives. I do some work for an organisation that relies quite heavily on its distrubuted benefits and for the most part it works well. Every now & then a file gets stuck with a lock despite nobody having it open. I suspect the culprit is a Windows 10 machine with Microsoft sign-in features (and gets confused with OneDrive & other nonsense), but short of reinstalling Win10 I can't seem to resolve this intermittent problem.
 
